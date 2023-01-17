@@ -1,12 +1,16 @@
-import elasticsearch
 #from elasticsearch import helpers
 import json
+from typing import Callable, Generator
+
+from elasticsearch import Elasticsearch
+from elasticsearch.helpers import bulk
+
 
 class EF_ElasticSearch:
     def __init__(self):
         # configure elasticsearch
         config = {"http://localhost": "9200"}
-        self.es = elasticsearch.Elasticsearch(
+        self.es = Elasticsearch(
             [
                 config,
             ],
@@ -14,12 +18,46 @@ class EF_ElasticSearch:
         )
         self.last_scroll_id = None
 
-    def create_index(self, name, mapping, replace=False):
-        if replace:
-            self.delete_index(name)
-        print("creating index, name: ", name)
-        self.es.indices.create(index=name, body=mapping)
-        print("index created successfully, index name: " + name)
+
+    def _create_mappings(self):
+        # Todo:
+        #  Improve mapping by defining separate analyzers for separate fields
+        #  More details:
+        #  - https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html
+        return {
+            #"dynamic": "true",
+            "properties": {
+                "content": {
+                    "type": "text"
+                },
+            }
+        }
+
+    def _create_settings(self):
+        # Todo:
+        #  Define your own tokenizers, filters and analyzers here
+        #  More details:
+        #   - https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-tokenizers.html
+        #   - https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-tokenfilters.html
+        #   - https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html
+        return {
+            "analysis": {
+            }
+        }
+
+    def create_index(self, index_name, recreate=False):
+        if self.es.indices.exists(index=index_name):
+            if recreate:
+                self.es.indices.delete(index=index_name)
+            else:
+                return
+        mappings = self._create_mappings()
+        settings = self._create_settings()
+        print("creating index, name: ", index_name)
+        self.es.indices.create(
+            index=index_name, body={'mappings':mappings, 'settings':settings})
+        
+        print("index created successfully, index name: " + index_name)
 
     def delete_index(self, name):
         print("deleting index, name: ", name)
@@ -31,12 +69,20 @@ class EF_ElasticSearch:
         if is_bulk:
             try:
                 # make the bulk call, and get a response
-                response = elasticsearch.helpers.bulk(
+                response = bulk(
                     self.es, documents
                 )  # chunk_size=1000, request_timeout=200
                 print("\nRESPONSE:", response)
             except Exception as e:
                 print("\nERROR:", e)
+
+    def populate_index(
+        self,index_name: str, data_path: str, generate: Callable[[str, str], Generator]
+        ) -> None:
+
+        bulk(self.es, generate(index_name, data_path), refresh=True)
+        result = self.es.search(index=index_name, body={'query':{"match_all": {}}})
+        nr_docs = result["hits"]["total"]["value"]
 
     def search(self, index, body):
         try:
@@ -91,21 +137,3 @@ class EF_ElasticSearch:
         except Exception as e:
             print("\nERROR:", e)
 
-
-def generate_data(index_name: str, data_path: str):
-   
-    with open(data_path) as f:
-        lines = f.readlines()
-    
-    
-    for i, line in enumerate(lines):
-        doc = json.loads(line)
-        
-        yield {
-            "content": doc,
-            "_index": index_name,
-            "_id": doc["title"],
-        }
-
-es = EF_ElasticSearch()
-es.create_index("test", {"mappings": {"properties": {"name": {"type": "text"}}}})

@@ -1,7 +1,7 @@
 import json
 
 #
-# 9018 questions have been deleted out off 9942 questions, so only 924 questions are left aka 9.3% of the questions
+# 8910 questions have been deleted out off 9942 questions, so only 1032 questions are left aka 10.3% of the questions
 #
 if __name__ == "__main__":
 	out_data = json.load(open('./data/lawyer_answers_data.json', 'r'))

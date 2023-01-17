@@ -5,16 +5,16 @@ CF_ALL_TERMS_EXPERT_LEVEL = 3443922
 Count_of_all_answers = 33670
 from elasticsearch import Elasticsearch
 from ef_text_analyzer import TextAnalyzer
-from ef_elasticsearch import ElasticSearch as elasticsearch
+from ef_elasticsearch import EF_ElasticSearch as elasticsearch
 
 es = Elasticsearch(urls="http://localhost", port="9200", timeout=600)
-text_analyzer = TextAnalyzer()
+#text_analyzer = TextAnalyzer()
 
 Sampling = False
-CANDIDATE_LEVEL_FIELD = "ef_legal_user_level"
-CANDIDATE_LEVEL_INDEX = "content"
-COUNT_OF_EXPERTS = 3741
-queries_path = "../data/queries_bankruptcy.csv"
+CANDIDATE_LEVEL_FIELD = "content"
+CANDIDATE_LEVEL_INDEX = "ef_legal_user_level"
+#COUNT_OF_EXPERTS = 3741
+queries_path = "./data/queries_bankruptcy.csv"
 queries = open(queries_path, "r").read().splitlines()
 
 if Sampling:
@@ -87,15 +87,18 @@ def get_lambda_expert(expert_id):
         "term_statistics": True,
         "field_statistics": True,
     }
+    
     expert = es.termvectors(index=CANDIDATE_LEVEL_INDEX, body=body, id=str(expert_id))
-
+    
     doc_len = sum(
         [
             v["term_freq"]
             for k, v in expert["term_vectors"][CANDIDATE_LEVEL_FIELD]["terms"].items()
         ]
     )
+    
     n_expert = doc_len  # count of terms written by this expert | doc_len of specific field for that expert !
+
     total_terms_fre_in_collection = expert["term_vectors"][CANDIDATE_LEVEL_FIELD][
         "field_statistics"
     ]["sum_ttf"]
@@ -137,24 +140,37 @@ def get_expert_score_per_term(query, expert_id):
     return expert_score_for_this_query_term
 
 
+
 candidates_scores_expertlevel = (
     {}
 )  # structure: {"expert_id": {"query":[{answerIDXofExpert:score}, ..., {answeridN:score}]} }
 
+with open("./data/lawyerIds.json", "r") as f:
+    expert_ids = json.load(f)
+
 skip_experts = []
 for query in queries:
     print("query: ", query)
-    for expert_id in list(range(1, 3742)):
+    if(len(query.split(",")) !=2):
+        raise Exception("query is not in the right format")
+    query = query.split(",")[1]
+
+    for expert_id in expert_ids:
         if expert_id in skip_experts:
             continue
         expert_total_score = 1
 
         query_words = query.split(" ")
         for query_term in query_words:
+            print("query_term: ", query_term)
             ccc = get_expert_score_per_term(query_term, expert_id)
+            print("ccc: ", ccc)
             if ccc == "False":
                 skip_experts.append(expert_id)
                 break
+            #else:
+                #raise Exception("ccc is not false")
+            #print("\n\nexpert_id: ", expert_id)
             expert_score_for_this_query_term = ccc + 0.0000000001
             expert_total_score *= expert_score_for_this_query_term
 

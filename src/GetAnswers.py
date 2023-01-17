@@ -7,6 +7,9 @@ from lxml import html
 
 
 QUESTIONS_PATH = './data/question_links_bankruptcy.json'
+
+LAWYER_ID_PATH = "./data/lawyerid_to_lawyerurl.json"
+DOCUMENT_PATH = "./data/lawyer_answers_data.json"
 #QUESTIONS_PATH = '../data/q.json'
 
 def get_answers(doc: str) -> dict:
@@ -105,11 +108,11 @@ class Preprocessor:
 				#c += len(aws)
 				# merge the data
 				c +=1
-				if(c%100==0):
-					with open('./data/pages/lawyer_answers_data_'+ str(c) +'.json', 'w') as f:
-						json.dump(data, f)
+				#if(c%100==0):
+				#	with open('./data/pages/lawyer_answers_data_'+ str(c) +'.json', 'w') as f:
+				#		json.dump(data, f)
 		
-		with open('./data/lawyer_answers_data.json', 'w') as f:
+		with open(DOCUMENT_PATH, 'w') as f:
 			json.dump(data, f)
 		print(str(deleted_questions)+" questions have been deleted out off "+str(c+deleted_questions)+" questions")
 
@@ -118,5 +121,27 @@ class Preprocessor:
 		self.create_questions_data_from_url()
 
 if __name__ == "__main__":
-    preprocessor = Preprocessor()
-    preprocessor.create_data()
+	preprocessor = Preprocessor()
+	preprocessor.create_data()
+
+	with open(LAWYER_ID_PATH) as f:
+		lawyers = json.load(f)
+		
+		new_lawyers = {}
+		for lawyer_id, lawyer_url in lawyers.items():
+			avvo_id = lawyer_url.replace("https://www.avvo.com/attorneys/", "").replace(".html", "")
+			new_lawyers[avvo_id]=lawyer_id
+
+	with open(DOCUMENT_PATH) as f:
+		data = json.load(f)
+		new_data = {}
+		ids = []
+		for avvo_id, answers in data.items():
+			new_id = new_lawyers[avvo_id]
+			new_data[new_id] = answers
+			ids.append(new_id)
+		
+	with open(DOCUMENT_PATH, "w") as f:
+		json.dump(new_data, f)
+	with open("./data/lawyerIds.json", "w") as f:
+		json.dump(ids, f)

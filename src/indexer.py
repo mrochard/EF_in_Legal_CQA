@@ -1,23 +1,47 @@
+
 from ef_elasticsearch import EF_ElasticSearch
+from typing import Callable, Generator
 import json
+
+from elasticsearch import Elasticsearch
+from elasticsearch.helpers import bulk
 
 DOCUMENT_LEVEL_INDEX = "ef_legal_doc_level"
 CANDIDATE_LEVEL_INDEX = "ef_legal_user_level"
 
-es = EF_ElasticSearch()
+DOCUMENT_PATH = "./data/lawyer_answers_data.json"
+LAWYER_ID_PATH = "./data/lawyerid_to_lawyerurl.json"
 
 
-# Read the data
-lawyer_path = 'data/lawyer_data.json'
-lawyer = json.load(open(lawyer_path, 'r'))
+def generate_data(index_name: str, data_path: str):
+	with open(data_path) as f:
+		data = json.load(f)
+	
+	for lawyer_id, answers in data.items():
+		
+		content = ''
+		aws = []
+		for answer in answers:
+			content += answer['response']
+			a = {
+				'question': answer['post'],
+				'answer': answer['response'].lower(),
+			}
+			aws.append(a)
+		yield {
+			"content": content,
+			"all_answers_merged_in_array_content_whitespace_w_punc_lowercase": aws,
+			"owner_incremental_id": lawyer_id,
+			"_index": index_name,
+			"_id": lawyer_id,
+		}
 
-question_path = 'data/question_data.json'
-question = json.load(open(question_path, 'r'))
+# main
+if __name__ == "__main__":
 
-# Index the data
-for lawyer_id, lawyer_url in lawyer.items():
-	es.create_index(CANDIDATE_LEVEL_INDEX, { "mapping": {"properties": {"content": {"type": "text"}}}})
-	es.create_index(DOCUMENT_LEVEL_INDEX, { "mapping": {"properties": {"content": {"type": "text"}}}})
 
+	es = EF_ElasticSearch()
+	es.create_index(CANDIDATE_LEVEL_INDEX, recreate=True)
+	#es.create_index(DOCUMENT_LEVEL_INDEX, { "mapping": {"properties": {"content": {"type": "text"}}}})
 	# Index the data
-	es.index(CANDIDATE_LEVEL_INDEX, lawyer_id, {"content": lawyer_url})
+	es.populate_index(CANDIDATE_LEVEL_INDEX, DOCUMENT_PATH, generate_data)
