@@ -47,12 +47,12 @@ class Scrapper:
 					data[page_name] = aws
 				except Exception as e:
 					print("!"+e)
-				if (c != 0 and c % 100 == 0):
-					# save the data
-					with open('./data/question_links_'+ str(c) +'.json', 'w') as f:
-						json.dump(data, f)
+				#if (c != 0 and c % 100 == 0):
+				#	# save the data
+				#	with open('./data/question_links_'+ str(c) +'.json', 'w') as f:
+				#		json.dump(data, f)
 				c += 1
-		with open('./data/question_links_hole.json', 'w') as f:
+		with open('./data/question_links.json', 'w') as f:
 			json.dump(data, f)
 
 # main

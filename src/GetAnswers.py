@@ -111,10 +111,10 @@ class Preprocessor:
 
 				except Exception as e:
 					print("!"+e)
-			with open('./data/pages_question_data_'+ str(c) +'.json', 'w') as f:
-				json.dump(data, f)
+			#with open('./data/pages/question_data_'+ str(c) +'.json', 'w') as f:
+			#	json.dump(data, f)
 			
-		with open('./data/question_data.json', 'w') as f:
+		with open('./data/answers_data.json', 'w') as f:
 			json.dump(data, f)
 
 
