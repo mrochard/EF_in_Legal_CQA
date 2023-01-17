@@ -5,15 +5,16 @@ from ef_text_analyzer import TextAnalyzer
 CF_ALL_TERMS_EXPERT_LEVEL = 3443922
 Count_of_all_answers = 33670
 from elasticsearch import Elasticsearch
-from ef_elasticsearch import ElasticSearch as elasticsearch
+from ef_elasticsearch import EF_ElasticSearch as elasticsearch
 
 es = Elasticsearch(urls="http://localhost", port="9200", timeout=600)
-text_analyzer = TextAnalyzer()
+#text_analyzer = TextAnalyzer()
 
-Sampling = False
+Sampling = True
 DOCUMENT_LEVEL_INDEX = "ef_legal_doc_level"
+#DOCUMENT_LEVEL_INDEX = "ef_legal_user_level"
 DOCUMENT_LEVEL_FIELD = "content"
-queries_path = "../data/queries_bankruptcy.csv"
+queries_path = "./data/queries_bankruptcy.csv"
 queries = open(queries_path, "r").read().splitlines()
 if Sampling:
     queries = [queries[0]]
@@ -47,7 +48,10 @@ def find_an_doc_id_that_has_specific_query_term(term):
         },
     }
     candidates = es.search(index=DOCUMENT_LEVEL_INDEX, body=bool_query)
-    return candidates["hits"]["hits"][0]["_id"]
+    try :
+        return candidates["hits"]["hits"][0]["_id"]
+    except:
+        raise Exception("No doc id found for term: " + term +"\n\n" + str(candidates))
 
 
 def get_p_tc_doclevel(query_input_term):
@@ -83,6 +87,10 @@ beta_doc_level = CF_ALL_TERMS_EXPERT_LEVEL / Count_of_all_answers
 p_tc_query_terms = {}
 for query in queries:
     print("query: ", query)
+    if(len(query.split(",")) !=2):
+        raise Exception("query is not in the right format")
+    query = query.split(",")[1]
+
     top_1000_answers_for_query = find_top_1000_answers_for_query(query)
     query_words = query.split(" ")
     for answer in top_1000_answers_for_query:
