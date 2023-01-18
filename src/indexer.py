@@ -44,7 +44,7 @@ def generate_data_doc(index_name: str, data_path: str):
 		i += 1
 		for answer in answers:
 			yield {
-			"content": (answer['response']+"\n"+answer['post']),
+			"content": answer['response']+"\n"+answer['post'],
 			"owner_incremental_id": lawyer_id,
 			"_index": index_name,
 			"_id": i,

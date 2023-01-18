@@ -10,7 +10,7 @@ from ef_elasticsearch import EF_ElasticSearch as elasticsearch
 es = Elasticsearch(urls="http://localhost", port="9200", timeout=600)
 #text_analyzer = TextAnalyzer()
 
-Sampling = True
+Sampling = False
 DOCUMENT_LEVEL_INDEX = "ef_legal_doc_level"
 #DOCUMENT_LEVEL_INDEX = "ef_legal_user_level"
 DOCUMENT_LEVEL_FIELD = "content"

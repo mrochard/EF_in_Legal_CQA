@@ -11,8 +11,8 @@ QUESTIONS_PATH = './data/question_links_bankruptcy.json'
 LAWYER_ID_PATH = "./data/lawyerid_to_lawyerurl.json"
 DOCUMENT_PATH = "./data/lawyer_answers_data.json"
 #QUESTIONS_PATH = '../data/q.json'
-
-def get_answers(doc: str) -> dict:
+answers_id = 0
+def get_answers(doc: str,id:int) -> dict:
 	"""
 	Extracts the answers from the html of a question page. Answers are in the form of a list of dictionaries.
 	With each dictionary containing the answer text and the answerer author.
@@ -20,6 +20,7 @@ def get_answers(doc: str) -> dict:
 	:param html: html of the question page
 	:return: list of answers
 	"""
+	global answers_id
 	new_answers = {}
 	soup = BeautifulSoup(doc, 'html.parser')
 	answers = soup.find_all('div', {'class':'qa-answer'})
@@ -45,7 +46,7 @@ def get_answers(doc: str) -> dict:
 			#author_id = resp[i].xpath('//div[@class="row answer-professional"]//a[@class="lawyer-headshot"]/@href').strip().split('-')[-1].replace('.html','')
 			author_id = answers[i].find('div', class_='row answer-professional').find('a', class_='lawyer-headshot').get('href').strip().split('-')[-1].replace('.html','')
 		except:
-			print("error")
+			print("error in author id")
 			#print(resp[i].xpath('//div[@class="row answer-professional"]//a[@class="small gtm-subcontext"]/@href'))
 		if not author_id in new_answers:
 			new_answers[author_id] = []
@@ -55,10 +56,29 @@ def get_answers(doc: str) -> dict:
 		#print(votes)
 		a['upvotes'] = int(votes[4].text.replace(' lawyer agrees','').replace(' lawyers agree',''))
 		a['helpful'] = int(votes[0].text)
+		a['question_id'] = id
+		a['answer_id'] = answers_id
+		answers_id += 1
 		if len(votes) > 6:
 			a['most_helpful'] = "Voted as Most Helpful" in votes[6].text
 		else:
 			a['most_helpful'] = False
+
+		a['comments'] = []
+		try:
+			comments = answers[i].find_all('div', {'class':'comment-header'})
+			#print(comments)
+			for comment in comments:
+			#	print(comment)
+				c = {
+					'author': comment.find('strong').text,
+					'text': comment.find('p').text.strip(),
+					'is_asker': comment.find('strong').text == 'Asker',
+				}
+
+				a['comments'].append(c)
+		except:
+			a['comments'] = []
 		#new_answers[author_id].append(resp[i].xpath('//div[@class="answer-body is-truncated"]/p').text)
 		new_answers[author_id].append(a)
 		#a['author'] = answer.find('div', class_='answer-professional').find('a').get('href')
@@ -84,6 +104,7 @@ class Preprocessor:
 		# download the data from the url
 		c = 0
 		deleted_questions = 0
+		q_id = 0
 		for page_id, question_urls in self.questions.items():
 			print(page_id)
 			i=0
@@ -93,13 +114,13 @@ class Preprocessor:
 				r = self.scraper.get(question_url)
 				#r = self.text_analyzer.normalize(r.text,remove_html_tag=True)
 				try:
-					aws = get_answers(r.text)
+					aws = get_answers(r.text,q_id)
 					for k,v in aws.items():
 						if k in data:
 							data[k].extend(v)
 						else:
 							data[k] = v
-				
+					q_id += 1
 				except:
 					print("error in page: " + page_id + " question: " + question_url +" the question likely has been deleted")
 					deleted_questions +=1
