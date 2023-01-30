@@ -12,6 +12,7 @@ LAWYER_ID_PATH = "./data/lawyerid_to_lawyerurl.json"
 DOCUMENT_PATH = "./data/lawyer_answers_data.json"
 #QUESTIONS_PATH = '../data/q.json'
 answers_id = 0
+
 def get_answers(doc: str,id:int) -> dict:
 	"""
 	Extracts the answers from the html of a question page. Answers are in the form of a list of dictionaries.
@@ -29,31 +30,19 @@ def get_answers(doc: str,id:int) -> dict:
 		post = soup.find('div',{ 'id':'qa-subject-display'}).text.strip()
 	except:
 		raise Exception("Error: no post found in the page: "+doc)
-	#print(post)
-	# get the question
-	#title = post.find('h1').text
-	#text_question = post.find('div', {'id':'question-body'}).text
-	#resp = html.fromstring(doc)
-	#answers = resp.xpath('div[@class="card qa-lawyer-card qa-answer qa-bordertop"]//div[@class="js-answer"]')
-	#xpath('//*[@class="answer-body is-truncated"]/p')
-	#print("--"+len(answers))
+	
 	for i in range(0, len(answers)):
 		a = {
 			'post': post,
 		}
-		#print(answers[i])
 		try:
-			#author_id = resp[i].xpath('//div[@class="row answer-professional"]//a[@class="lawyer-headshot"]/@href').strip().split('-')[-1].replace('.html','')
 			author_id = answers[i].find('div', class_='row answer-professional').find('a', class_='lawyer-headshot').get('href').strip().split('-')[-1].replace('.html','')
 		except:
 			print("error in author id")
-			#print(resp[i].xpath('//div[@class="row answer-professional"]//a[@class="small gtm-subcontext"]/@href'))
 		if not author_id in new_answers:
 			new_answers[author_id] = []
-		#a['response'] = resp[i].xpath('//div[@class="answer-body is-truncated"]/p').text answer-upvote-section
 		a['response'] = answers[i].find('div', class_='answer-body').find('p').text.strip()
 		votes = answers[i].find('span', class_='answer-upvote-section').find_all('span')
-		#print(votes)
 		a['upvotes'] = int(votes[4].text.replace(' lawyer agrees','').replace(' lawyers agree',''))
 		a['helpful'] = int(votes[0].text)
 		a['question_id'] = id
@@ -79,9 +68,7 @@ def get_answers(doc: str,id:int) -> dict:
 				a['comments'].append(c)
 		except:
 			a['comments'] = []
-		#new_answers[author_id].append(resp[i].xpath('//div[@class="answer-body is-truncated"]/p').text)
 		new_answers[author_id].append(a)
-		#a['author'] = answer.find('div', class_='answer-professional').find('a').get('href')
 
 	return new_answers
 
@@ -93,10 +80,7 @@ def get_questions_data():
 class Preprocessor:
 
 	def __init__(self):
-		#self.lawyer = get_lawyer_data()
 		self.questions = get_questions_data()
-		#self.text_analyzer = TextAnalyzer()
-		#self.scraper = cloudscraper.create_scraper(delay=10, browser='chrome',disableCloudflareV1=False)
 		self.scraper = cloudscraper.create_scraper()
 
 	def create_questions_data_from_url(self):
@@ -112,7 +96,6 @@ class Preprocessor:
 				print(i)
 				i+=1
 				r = self.scraper.get(question_url)
-				#r = self.text_analyzer.normalize(r.text,remove_html_tag=True)
 				try:
 					aws = get_answers(r.text,q_id)
 					for k,v in aws.items():
@@ -125,13 +108,7 @@ class Preprocessor:
 					print("error in page: " + page_id + " question: " + question_url +" the question likely has been deleted")
 					deleted_questions +=1
 					continue
-					#raise Exception("error in page: " + page_id + " question: " + question_url)
-				#c += len(aws)
-				# merge the data
 				c +=1
-				#if(c%100==0):
-				#	with open('./data/pages/lawyer_answers_data_'+ str(c) +'.json', 'w') as f:
-				#		json.dump(data, f)
 		
 		with open(DOCUMENT_PATH, 'w') as f:
 			json.dump(data, f)
@@ -140,6 +117,33 @@ class Preprocessor:
 	def create_data(self):
 		#self.create_lawyer_data_from_url()
 		self.create_questions_data_from_url()
+
+def analyseOurData():
+
+	print("------------------------------------------------------------")
+	print("------------------------ Analysis --------------------------")
+	print("------------------------------------------------------------")
+	out_data = json.load(open(DOCUMENT_PATH, 'r'))
+	
+	our_lawyers = list(out_data.keys())
+	i=0
+	for k in our_lawyers:
+		i += len(out_data[k])
+	print("We have gathered "+ str(i) +" answers")
+	their_data=json.load(open(LAWYER_ID_PATH, 'r'))
+	#their_data = [v for k,v in their_data.items()]
+	
+	their_lawyers = their_data.keys()
+	their_lawyers = set(their_lawyers)
+	our_lawyers = set(our_lawyers)
+	print("--------------------")
+	print("We have gathered "+str(len(our_lawyers))+" lawyers")
+	print("They gathered "+str(len(their_lawyers))+" lawyers")
+	print("Or "+str(len(our_lawyers)/len(their_lawyers)*100)+"% of their lawyers")
+	missing = their_lawyers - our_lawyers
+	print("--------------------")
+	print("We are missing "+str(len(missing))+" lawyers in our data out off their "+str(len(their_lawyers))+" lawyers ("+str(len(missing)/len(their_lawyers)*100)+"%)")
+	print("We have "+str(len(our_lawyers - their_lawyers))+" lawyers that they don't have")
 
 if __name__ == "__main__":
 	preprocessor = Preprocessor()
@@ -166,3 +170,4 @@ if __name__ == "__main__":
 		json.dump(new_data, f)
 	with open("./data/lawyerIds.json", "w") as f:
 		json.dump(ids, f)
+	analyseOurData()
