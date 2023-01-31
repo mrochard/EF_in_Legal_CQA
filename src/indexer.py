@@ -14,6 +14,15 @@ LAWYER_ID_PATH = "./data/lawyerid_to_lawyerurl.json"
 
 
 def generate_data_user(index_name: str, data_path: str):
+	"""Generate data for the user level index.
+	
+	Args:
+		index_name (str): The name of the index.
+		data_path (str): The path to the data.
+	
+	Yields:
+		Generator: A generator of the data.
+	"""
 	with open(data_path) as f:
 		data = json.load(f)
 	
@@ -37,6 +46,15 @@ def generate_data_user(index_name: str, data_path: str):
 		}
 
 def generate_data_doc(index_name: str, data_path: str):
+	"""Generate data for the document level index.
+
+	Args:
+		index_name (str): The name of the index.
+		data_path (str): The path to the data.
+		
+	Yields:
+		Generator: A generator of the data.
+	"""
 	with open(data_path) as f:
 		data = json.load(f)
 	i = 0
@@ -44,7 +62,7 @@ def generate_data_doc(index_name: str, data_path: str):
 		i += 1
 		for answer in answers:
 			yield {
-			"content": answer['response']+"\n"+answer['post'],
+			"content": answer['post']+"\n"+answer['response'],
 			"owner_incremental_id": lawyer_id,
 			"_index": index_name,
 			"_id": i,
@@ -53,8 +71,6 @@ def generate_data_doc(index_name: str, data_path: str):
 
 # main
 if __name__ == "__main__":
-
-
 	es = EF_ElasticSearch()
 	es.create_index(CANDIDATE_LEVEL_INDEX, recreate=True)
 	es.create_index(DOCUMENT_LEVEL_INDEX, recreate=True)

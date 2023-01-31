@@ -1,4 +1,7 @@
-# Expert Finding in Legal Community Question Answering
+# Reproducing: Expert finding in the Legal Community Question Answering
+HOFMANN Christopher, ROCHARD Matthieu, POREMBA Pascal (10.5281/zenodo.7591609)
+
+### Original: Expert Finding in Legal Community Question Answering
 Arian Askari, Suzan Verberne, and Gabriella Pasi. *Expert Finding in Legal Community Question Answering*. ECIR 2022 (short).
 
 If you use this work, please cite as:
@@ -32,3 +35,9 @@ The implementation of candidate level and document level baselines (Model 1 LM, 
 
 
 P.S: All pages were stored anonymously during this research with regard to the users' privacy.
+
+### Web scrapper
+The answer to the provied posts can be scraped using `src/scrapper.py` which will produce `data/lawyer_answers_data.json` containing data on every answer found. As avvo is protected by CloudFlare, the scrapper may return an error, in which case it is necesseray to wait between 5 and 10 minutes before retrying. The scrapper also produces `data/lawyerIds.json` which contains a list of all lawyers that where retrieved.
+
+### Indexing 
+`src/indexer.py` will index the answer data, for both condidate and document based models. 

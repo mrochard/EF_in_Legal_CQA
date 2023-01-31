@@ -1,8 +1,28 @@
-beautifulsoup4==4.9.1
-elasticsearch==7.9.1
-nltk==3.5
-torch>=1.1.0
-pytorch-pretrained-bert==0.6.2
-tqdm
-pytools==2018.5.2
--e utils
+beautifulsoup4 @ file:///tmp/build/80754af9/beautifulsoup4_1605302235287/work
+brotlipy==0.7.0
+certifi @ file:///croot/certifi_1671487769961/work/certifi
+cffi @ file:///croot/cffi_1670423208954/work
+charset-normalizer @ file:///tmp/build/80754af9/charset-normalizer_1630003229654/work
+click @ file:///tmp/build/80754af9/click_1646056590078/work
+cloudscraper==1.2.68
+cryptography @ file:///croot/cryptography_1673298753778/work
+cwl-eval==1.0.12
+elasticsearch @ file:///tmp/build/80754af9/elasticsearch_1600294816279/work
+idna @ file:///croot/idna_1666125576474/work
+ir-measures==0.3.1
+joblib @ file:///croot/joblib_1666298844297/work
+lxml @ file:///opt/conda/conda-bld/lxml_1657545139709/work
+nltk @ file:///tmp/build/80754af9/nltk_1592496090529/work
+numpy==1.24.1
+pycparser @ file:///tmp/build/80754af9/pycparser_1636541352034/work
+pyOpenSSL @ file:///opt/conda/conda-bld/pyopenssl_1643788558760/work
+pyparsing==3.0.9
+PySocks @ file:///tmp/build/80754af9/pysocks_1605305812635/work
+pytrec-eval-terrier==0.5.5
+regex @ file:///tmp/abs_41f5bce5-0a2e-45aa-b231-1fd2fbd57753gfpe6sjm/croots/recipe/regex_1658257178822/work
+requests @ file:///opt/conda/conda-bld/requests_1657734628632/work
+requests-toolbelt==0.10.1
+soupsieve @ file:///croot/soupsieve_1666296392845/work
+tqdm @ file:///opt/conda/conda-bld/tqdm_1664392687731/work
+urllib3 @ file:///croot/urllib3_1670526988650/work
+-e git+https://github.com/mrochard/EF_in_Legal_CQA.git@e76654824ddd157779c892a7eebcdf72253900bb#egg=utils&subdirectory=utils
