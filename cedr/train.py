@@ -3,12 +3,14 @@ import subprocess
 import random
 import tempfile
 from tqdm import tqdm
-import torch
 import modeling
 import data
 import pytrec_eval
 from statistics import mean
 from collections import defaultdict
+import csv
+import torch
+import json
 
 
 
@@ -176,17 +178,39 @@ def write_run(rerank_run, runf):
 #     # we use the same qrels object for both training and validation sets
 #     main(model, dataset, train_pairs, qrels, valid_run, qrels, args.model_out_dir)
 
+def build_dataset() -> tuple[dict, dict]:
+    """Reproduce the dataset with the data our group was able to scrape from avvo.com.
+
+    Returns:
+        tuple[dict, dict]: A tuple containing two dictionaries, which contains the 
+            text of documents and queries in both training and validation sets
+    """
+    
+    # Extract queries from queries_bankcruptcy.csv
+    queries = {}
+    with open(os.path.join("..", "data", "queries_bankruptcy.csv"), newline='') as f:
+        for id, tag in csv.reader(f, delimiter=","):
+            queries["q" + id] = tag
+
+    # Extract answers from scraped data
+    answers = {}
+    with open(os.path.join("..", "data", "lawyer_answers_data.json")) as f:
+        for key, value in json.loads(f.read()).items():
+            answers["d" + key] = value[0]["response"]
+
+    return queries, answers
+
 
 if __name__ == '__main__':
     # main_cli()
 
     model = modeling.VanillaBertRanker()
-    dataset = None  # TODO
+    dataset = build_dataset()
     qrels = os.path.join("..", "data", "labels.qrel")
-    train_pairs = None  # TODO
-    valid_run = None  # TODO
+    train_pairs = None  
+    valid_run = None
     model_out_dir = os.path.join("..", "models", "bert_baseline")
-
     os.makedirs(model_out_dir, exist_ok=True)
-    # we use the same qrels object for both training and validation sets
+
+    # ! We can't run it because we were not able to reconstruct the labels
     main(model, dataset, train_pairs, qrels, valid_run, qrels, model_out_dir)
