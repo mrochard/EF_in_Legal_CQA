@@ -1,5 +1,5 @@
 # Reproducing: Expert finding in the Legal Community Question Answering
-HOFMANN Christopher, ROCHARD Matthieu, POREMBA Pascal (10.5281/zenodo.7591609)
+HOFMANN Christopher, ROCHARD Matthieu, POREMBA Pascal ([10.5281/zenodo.7591609](https://doi.org/10.5281/zenodo.7591609))
 
 ### Original: Expert Finding in Legal Community Question Answering
 Arian Askari, Suzan Verberne, and Gabriella Pasi. *Expert Finding in Legal Community Question Answering*. ECIR 2022 (short).
