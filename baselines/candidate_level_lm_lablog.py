@@ -163,7 +163,10 @@ for query in queries:
         query_words = query.split(" ")
         for query_term in query_words:
             print("query_term: ", query_term)
-            ccc = get_expert_score_per_term(query_term, expert_id)
+            try:
+                ccc = get_expert_score_per_term(query_term, expert_id)
+            except Exception as e:
+                ccc = "False"
             print("ccc: ", ccc)
             if ccc == "False":
                 skip_experts.append(expert_id)

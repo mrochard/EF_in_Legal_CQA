@@ -120,7 +120,11 @@ for query in queries:
                 p_tc = p_tc_query_terms[query_term]
             else:
                 p_tc = 0
-                p_tc = get_p_tc_doclevel(query_term)
+                try:
+                    p_tc = get_p_tc_doclevel(query_term)
+                except:
+                    print("query term not found in collection: ", query_term)
+                    continue
                 p_tc_query_terms[query_term] = p_tc
 
             p_td = answer_text_list.count(query_term) / answer_len
